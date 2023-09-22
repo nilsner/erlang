@@ -38,7 +38,7 @@ loop(Name, Log, Peers, Sleep, Jitter, Timestamp)->
         Selected ! {msg, Time, Message},
         jitter(Jitter),
         Log ! {log, Name, Time, {sending, Message}},
-        loop(Name, Log, Peers, Sleep, Jitter, Time)
+        loop(Name, Log, Peers, Sleep, Jitter, Time) % test
 end.
 
 select(Peers) ->
