@@ -1,0 +1,28 @@
+erl -name sweden@130.229.142.34 -setcookie Nils -connect_all false.
+erl -name germany@130.229.142.34 -setcookie Nils -connect_all false.
+
+cover:compile_directory().
+
+2> routy:start(sthlm, sthlm).
+
+3> routy:start(muc, muc).
+
+4> sthlm ! {add, muc, {muc, 'germany@130.229.142.34'}}.
+
+4> muc ! {add, sthlm, {sthlm, 'sweden@130.229.142.34'}}.
+
+5> sthlm ! broadcast.
+
+6> muc ! broadcast.
+
+7> sthlm ! update.
+
+7> muc ! update.
+
+8> sthlm ! {send, muc, 'Hello big boy'}.
+
+9> muc ! {send, sthlm, 'What are you doing here?!'}.
+
+10> sthlm ! stop.
+
+11> muc ! stop.

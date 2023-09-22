@@ -1,0 +1,94 @@
+nilsblomgren@n147-p55 routy % erl -name sweden -setcookie routy -connect_all false.
+Erlang/OTP 26 [erts-14.0.2] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [jit] [dtrace]
+
+Eshell V14.0.2 (press Ctrl+G to abort, type help(). for help)
+(sweden@n142-p34.eduroam.kth.se)1> cover:compile_directory().
+[{ok,routy},
+ {ok,run},
+ {ok,dijkstra},
+ {ok,interface},
+ {ok,hist},
+ {ok,map}]
+
+(sweden@n142-p34.eduroam.kth.se)2> routy:start(sthlm, sthlm).
+true
+
+(sweden@n142-p34.eduroam.kth.se)3> routy:start(gbg, gbg).
+true
+
+(sweden@n142-p34.eduroam.kth.se)4> sthlm ! {add, gbg, {gbg, node()}}.
+{add,gbg,{gbg,'sweden@n142-p34.eduroam.kth.se'}}
+sthlm: gbg added
+
+(sweden@n142-p34.eduroam.kth.se)5> gbg ! {add, sthlm, {sthlm, node()}}.
+gbg: sthlm added
+
+(sweden@n142-p34.eduroam.kth.se)6> sthlm ! broadcast.   
+sthlm: broadcast {links,sthlm,0,[gbg]}
+
+(sweden@n142-p34.eduroam.kth.se)7> gbg ! broadcast.
+gbg: broadcast {links,gbg,0,[sthlm]}
+
+(sweden@n142-p34.eduroam.kth.se)8> sthlm ! update.
+sthlm: update [{sthlm,gbg},{gbg,gbg}]
+
+(sweden@n142-p34.eduroam.kth.se)9> gbg ! update.
+gbg: update [{gbg,sthlm},{sthlm,sthlm}]
+
+(sweden@n142-p34.eduroam.kth.se)10> sthlm ! {add, wellington, {wellington, nz@n164-p155.eduroam.kth.se}}.
+* 1:52: syntax error before: '.'
+
+(sweden@n142-p34.eduroam.kth.se)10> sthlm ! {add, wellington, {wellington, 'nz@n164-p155.eduroam.kth.se'}}.
+sthlm: wellington added
+
+(sweden@n142-p34.eduroam.kth.se)11> sthlm ! broadcast.
+sthlm: broadcast {links,sthlm,1,[wellington,gbg]}
+sthlm: received message 'Test msg for sthlm' from wellington
+
+(sweden@n142-p34.eduroam.kth.se)12> sthlm ! broadcast.
+sthlm: broadcast {links,sthlm,2,[wellington,gbg]}
+
+(sweden@n142-p34.eduroam.kth.se)13> gbg ! broadcast.
+gbg: broadcast {links,gbg,1,[sthlm]}
+
+(sweden@n142-p34.eduroam.kth.se)14> gbg ! update.
+gbg: update [{napier,sthlm},{tauranga,sthlm},{auckland,sthlm},{christchurch,sthlm},{hamilton,sthlm},{gbg,sthlm},{wellington,sthlm},{sthlm,sthlm}]
+update
+
+(sweden@n142-p34.eduroam.kth.se)15> sthlm ! update.
+sthlm: update [{napier,wellington},{tauranga,wellington},{auckland,wellington},{sthlm,wellington},{christchurch,wellington},{hamilton,wellington},{gbg,gbg},{wellington,wellington}]
+update
+
+(sweden@n142-p34.eduroam.kth.se)16> gbg ! {send, hamilton, 'Hello from the other side of the world!'}.
+gbg: routing message to hamilton
+{send,hamilton,'Hello from the other side of the world!'}
+GW: sthlm
+sthlm: routing message to hamilton
+GW: wellington
+sthlm: routing message to gbg
+GW: gbg
+gbg: received message 'Test msg for gbg' from wellington
+
+(sweden@n142-p34.eduroam.kth.se)17> gbg ! {send, tauranga, 'Hello from the other!'}.                  
+gbg: routing message to tauranga
+{send,tauranga,'Hello from the other!'}
+GW: sthlm
+sthlm: routing message to tauranga
+GW: wellington
+
+(sweden@n142-p34.eduroam.kth.se)18> gbg ! {send, tauranga, 'Hello from the other!'}.
+gbg: routing message to tauranga
+{send,tauranga,'Hello from the other!'}
+GW: sthlm
+sthlm: routing message to tauranga
+GW: wellington
+
+(sweden@n142-p34.eduroam.kth.se)19> gbg ! {send, tauranga, 'Hello from the other!'}.
+gbg: routing message to tauranga
+{send,tauranga,'Hello from the other!'}
+GW: sthlm
+sthlm: routing message to tauranga
+GW: wellington
+
+(sweden@n142-p34.eduroam.kth.se)20> halt().
+nilsblomgren@n147-p55 routy % 
