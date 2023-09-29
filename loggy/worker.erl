@@ -19,7 +19,7 @@ end.
 peers(Wrk, Peers) ->
 Wrk ! {peers, Peers}.
 
-loop(Name, Log, Peers, Sleep, Jitter, Timestamp)->
+loop(Name, Log, Peers, Sleep, Jitter, Timestamp) ->
     Wait = random:uniform(Sleep),
     receive
     {msg, Time, Msg} ->
@@ -38,7 +38,7 @@ loop(Name, Log, Peers, Sleep, Jitter, Timestamp)->
         Selected ! {msg, Time, Message},
         jitter(Jitter),
         Log ! {log, Name, Time, {sending, Message}},
-        loop(Name, Log, Peers, Sleep, Jitter, Time) % test
+        loop(Name, Log, Peers, Sleep, Jitter, Time)
 end.
 
 select(Peers) ->

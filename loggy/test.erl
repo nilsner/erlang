@@ -2,18 +2,18 @@
 -export([run/2]).
 
 run(Sleep, Jitter) ->
-Log = loggerLoggy:start([john, george]),
+Log = loggerLoggy:start([john, george, paul, ringo]),
 A = worker:start(john, Log, 13, Sleep, Jitter),
-%B = worker:start(paul, Log, 23, Sleep, Jitter),
-%C = worker:start(ringo, Log, 36, Sleep, Jitter),
+B = worker:start(paul, Log, 23, Sleep, Jitter),
+C = worker:start(ringo, Log, 36, Sleep, Jitter),
 D = worker:start(george, Log, 49, Sleep, Jitter),
-worker:peers(A, [ D]),
-%worker:peers(B, [A, C, D]),
-%worker:peers(C, [A, B, D]),
-worker:peers(D, [ A]),
+worker:peers(A, [B, C, D]),
+worker:peers(B, [A, C, D]),
+worker:peers(C, [A, B, D]),
+worker:peers(D, [A, B, C]),
 timer:sleep(5000),
 loggerLoggy:stop(Log),
 worker:stop(A),
-%worker:stop(B),
-%worker:stop(C),
+worker:stop(B),
+worker:stop(C),
 worker:stop(D).

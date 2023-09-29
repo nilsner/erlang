@@ -31,7 +31,7 @@ loop(Name, Log, Peers, Sleep, Jitter, Timestamp)->
         % io:format("timestamp: ~w~n", [Timestamp]),
         IncrementedTime = timeVector:inc(Name,timeVector:merge(Timestamp, Time)),
         % io:format("incremented time: ~w~n", [IncrementedTime]),
-        io:format("~n"),
+        %io:format("~n"),
         Log ! {log, Name, IncrementedTime, {received, Msg}},
         loop(Name, Log, Peers, Sleep, Jitter, IncrementedTime);
     stop ->
@@ -41,14 +41,15 @@ loop(Name, Log, Peers, Sleep, Jitter, Timestamp)->
     
     after Wait ->
         Selected = select(Peers),
-        % io:format("Timestamp: ~w~n", [Timestamp]),
-        % io:format("Name: ~w~n", [Name]),
-        Time = timeVector:inc(Name,Timestamp),
+        %io:format("Timestamp: ~w~n", [Timestamp]),
+        %io:format("Name: ~w~n", [Name]),
+        IncrementedTime = timeVector:inc(Name,Timestamp), % update the clock for a specific worker
+        %io:format("Time: ~w~n", [Time]),
         Message = {hello, random:uniform(100)},
-        Selected ! {msg, Time, Message},
+        Selected ! {msg, IncrementedTime, Message},
         jitter(Jitter),
-        Log ! {log, Name, Time, {sending, Message}},
-        loop(Name, Log, Peers, Sleep, Jitter, Time) % test
+        Log ! {log, Name, IncrementedTime, {sending, Message}},
+        loop(Name, Log, Peers, Sleep, Jitter, IncrementedTime)
 end.
 
 select(Peers) ->
