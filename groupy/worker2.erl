@@ -58,7 +58,7 @@ Wait = wait(Sleep),
 receive
 %% Someone wants us to change the color
 {change, N} ->
-%% io:format("worker ~w change ~w~n", [Id, N]),
+io:format("worker ~w change ~w~n", [Id, N]),
 Color2 = change_color(N, Color),
 Gui ! {color, Color2},
 worker(Id, Cast, Color2, Gui, Sleep);
@@ -94,7 +94,7 @@ io:format("strange message: ~w~n", [Error]),
 worker(Id, Cast, Color, Gui, Sleep)
 after Wait ->
 %% Ok, let's propose a change of colors
-%% io:format("worker ~w mcast message~n", [Id]),
+io:format("worker ~w mcast message~n", [Id]),
 Cast ! {mcast, {change, random:uniform(?change)}},
 worker(Id, Cast, Color, Gui, Sleep)
 end.

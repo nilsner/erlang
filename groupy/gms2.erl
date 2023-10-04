@@ -15,16 +15,11 @@ init(Id, Rnd, Master) ->
 
 leader(Id, Master, Slaves, Group) ->
     receive
-    {mcast, Msg} -> % a message either from its own master or from a peer
-                    % node. A message {msg, Msg} is multicasted to all peers, and a message
-                    % Msg is sent to the application layer.
+    {mcast, Msg} -> 
         bcast(Id, {msg, Msg}, Slaves),
         Master ! Msg,
         leader(Id, Master, Slaves, Group);
-    {join, Wrk, Peer} -> %  amessage from a peer or the master that is a
-                         % request from a node to join the group. The message contains the pro-
-                         % cess identifier of the application layer, Wrk, and the process identifier
-                         % of its group process.
+    {join, Wrk, Peer} -> 
         Slaves2 = lists:append(Slaves, [Peer]),
         Group2 = lists:append(Group, [Wrk]),
         bcast(Id, {view, [self()|Slaves2], Group2}, Slaves2),

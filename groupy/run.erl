@@ -3,6 +3,8 @@
 -export([start/0]).
 
 start() ->
-Leader = worker2:start(1,gms3,12,200),
-worker2:start(2,gms3,11,Leader,200),
-worker2:start(3,gms3,13,Leader,200).
+Leader = test:first(1,gms3,1000),   
+test:add(2,gms3,Leader,1000),
+test:add(3,gms3,Leader,1000),
+timer:sleep(5000),
+test:add(4,gms3,Leader,1000).

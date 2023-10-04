@@ -2,14 +2,20 @@
 -export([leader/4, start/1, init/2, slave/5, start/2, init/3]).
 -define(arghh, 100).
 
-start(Id) ->
+
+start(Id) -> % the master process is started by the application layer.
     Self = self(),
     {ok, spawn_link(fun()-> init(Id, Self) end)}.
 
-init(Id, Master) ->
+init(Id, Master) -> % the master process is initialized with its own process
+                    % identifier.
     leader(Id, Master, [], [Master]).
 
-leader(Id, Master, Slaves, Group) ->
+leader(Id, Master, Slaves, Group) -> % the leader process is in the state
+                                      % leader(Id, Master, Slaves, Group), where Id is the identifier of the
+                                      % leader process, Master is the process identifier of the application layer,
+                                      % Slaves is the list of process identifiers of the slave processes, and Group
+                                      % is the list of process identifiers of the application layer processes.
     receive
     {mcast, Msg} -> % a message either from its own master or from a peer
                     % node. A message {msg, Msg} is multicasted to all peers, and a message
@@ -17,7 +23,7 @@ leader(Id, Master, Slaves, Group) ->
         bcast(Id, {msg, Msg}, Slaves),
         Master ! Msg,
         leader(Id, Master, Slaves, Group);
-    {join, Wrk, Peer} -> %  amessage from a peer or the master that is a
+    {join, Wrk, Peer} -> % a message from a peer or the master that is a
                          % request from a node to join the group. The message contains the pro-
                          % cess identifier of the application layer, Wrk, and the process identifier
                          % of its group process.
@@ -44,7 +50,12 @@ init(Id, Grp, Master) -> % the slave process is initialized with the process ide
         slave(Id, Master, Leader, Slaves, Group)
 end.
 
-slave(Id, Master, Leader, Slaves, Group) ->
+slave(Id, Master, Leader, Slaves, Group) -> % the slave process is in the state
+                                            % slave(Id, Master, Leader, Slaves, Group), where Id is the identifier of the
+                                            % slave process, Master is the process identifier of the application layer,
+                                            % Leader is the process identifier of the leader process, Slaves is the list of
+                                            % process identifiers of the slave processes, and Group is the list of process
+                                            % identifiers of the application layer processes.
 receive
     {mcast, Msg} -> % a request from its master to multicast a message, the
                     % message is forwarded to the leader.
@@ -66,10 +77,11 @@ receive
     ok
 end.
 
-bcast(Id, Msg, Nodes) ->
+bcast(Id, Msg, Nodes) -> % the message Msg is multicasted to all nodes in the
+                         % list Nodes.
     lists:foreach(fun(Node) -> Node ! Msg, crash(Id) end, Nodes).
 
-crash(Id) ->
+crash(Id) -> % the process crashes with probability 1/100.
     case random:uniform(?arghh) of
     ?arghh ->
         io:format("leader ~w: crash~n", [Id]),

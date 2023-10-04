@@ -4,13 +4,13 @@
 %
 % W1 = test:first(1, gms1, 1000)
 first(N, Module, Sleep) ->
-worker:start(N, Module, random:uniform(256), Sleep).
+worker2:start(N, Module, random:uniform(256), Sleep).
 % Used to create additional workers, try:
 %
 % test:add(2, gms1, W1, 1000) and
 % test:add(3, gms1, W1, 1000) and ...
 add(N, Module, Wrk, Sleep) ->
-worker:start(N, Module, random:uniform(256), Wrk, Sleep).
+worker2:start(N, Module, random:uniform(256), Wrk, Sleep).
 %% To create a number of workers in one go,
 more(N, Module, Sleep) when N > 1 ->
 Wrk = first(1, Module, Sleep),
