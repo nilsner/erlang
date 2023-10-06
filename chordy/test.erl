@@ -1,45 +1,76 @@
 -module(test).
--export([test/0, test/1]).
--define(Stabilize, 100).
--define(Timeout, 10000).
 
-test() ->
-    Pid = node2:start(1),
-    %%io:format("Pid ~w~n", [Pid]),
-    %%node2:start(250000000, Pid),
-    %%node2:start(500000000, Pid),
-    %%node2:start(750000000, Pid),
-    %%register(node, Pid),
-    test(Pid).
+-compile(export_all).
 
-test(Node) ->    
-    timer:sleep(1000),
-    Keys = add(Node, [], 10000),
-    Start = now(),
-    lookup(Node, Keys),
-    End = now(),
-    io:format("Lookup time: ~w~n", [timer:now_diff(End, Start)]).
+-define(Timeout, 1000).
 
-add(_Pid, Keys, 0) ->
-    Keys;
-add(Pid, Keys, N) ->
-    Key = key:generate(),
-    Value = key:generate(),
-    Qref = make_ref(),
-    Pid ! {add, Key, Value, Qref, self()},
-    receive
-	{Qref, ok} ->
-	    add(Pid, [Key|Keys], N - 1)
+
+%% Starting up a set of nodes is made easier using this function.
+
+start(Module) ->
+    Id = key:generate(), 
+    apply(Module, start, [Id]).
+
+
+start(Module, P) ->
+    Id = key:generate(), 
+    apply(Module, start, [Id,P]).    
+
+start(_, 0, _) ->
+    ok;
+start(Module, N, P) ->
+    start(Module, P),
+    start(Module, N-1, P).
+
+%% The functions add and lookup can be used to test if a DHT works.
+
+add(Key, Value , P) ->
+    Q = make_ref(),
+    P ! {add, Key, Value, Q, self()},
+    receive 
+	{Q, ok} ->
+	   ok
+	after ?Timeout ->
+	    {error, "timeout"}
     end.
 
-lookup(_Pid, []) ->
-    ok;
-lookup(Pid, Keys) ->
-    [Key|Rest] = Keys,
-    Qref = make_ref(),
-    Pid ! {lookup, Key, Qref, self()},
-    receive
-	{Qref, Result} ->
-	    io:format("Lookup key ~w: ~w~n", [Key, Result]),
-	    lookup(Pid, Rest)
+lookup(Key, Node) ->
+    Q = make_ref(),
+    Node ! {lookup, Key, Q, self()},
+    receive 
+	{Q, Value} ->
+	    Value
+    after ?Timeout ->
+	    {error, "timeout"}
+    end.
+
+
+%% This benchmark can be used for a DHT where we can add and lookup
+%% key. In order to use it you need to implement a store.
+
+keys(N) ->
+    lists:map(fun(_) -> key:generate() end, lists:seq(1,N)).
+
+add(Keys, P) ->
+    lists:foreach(fun(K) -> add(K, gurka, P) end, Keys).
+
+check(Keys, P) ->
+    T1 = now(),
+    {Failed, Timeout} = check(Keys, P, 0, 0),
+    T2 = now(),
+    Done = (timer:now_diff(T2, T1) div 1000),
+    io:format("~w lookup operation in ~w ms ~n", [length(Keys), Done]),
+    io:format("~w lookups failed, ~w caused a timeout ~n", [Failed, Timeout]).
+
+
+check([], _, Failed, Timeout) ->
+    {Failed, Timeout};
+check([Key|Keys], P, Failed, Timeout) ->
+    case lookup(Key,P) of
+	{Key, _} -> 
+	    check(Keys, P, Failed, Timeout);
+	{error, _} -> 
+	    check(Keys, P, Failed, Timeout+1);
+	false ->
+	    check(Keys, P, Failed+1, Timeout)
     end.

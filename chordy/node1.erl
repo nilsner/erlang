@@ -48,7 +48,8 @@ stabilize(Pred, Id, Successor) ->
     {Skey, Spid} = Successor,
         case Pred of
             nil ->
-                Spid ! {notify, {Id, self()}};  
+                Spid ! {notify, {Id, self()}},
+                Successor;
             {Id, _} ->
                 Successor;
             {Skey, _} ->

@@ -6,12 +6,16 @@
 start(Id) ->
     start(Id, nil).
 
+
 start(Id, Peer) ->
     timer:start(),
-    spawn(fun() -> init(Id, Peer) end).
+    spawn(fun() -> 
+        init(Id, Peer) end).
 
 init(Id, Peer) ->
     Predecessor = nil,
+    io:format("Id: ~w~n", [Id]),
+    io:format("Peer: ~w~n", [Peer]),
     {ok, Successor} = connect(Id, Peer),
     schedule_stabilize(),
     node(Id, Predecessor, Successor, storage:create()).
@@ -19,11 +23,14 @@ init(Id, Peer) ->
 node(Id, Predecessor, Successor, Store) ->
     receive
         {key, Qref, Peer} -> % peer needs to know our key
+            io:format("In node, key~n"),
+            io:format("Qref: ~w~n", [Qref]),
+            io:format("Peer: ~w~n", [Peer]),
             Peer ! {Qref, Id},
             node(Id, Predecessor, Successor, Store);
         {notify, New} -> % new node informs us of its existence
-            Pred = notify(New, Id, Predecessor, Store),
-            node(Id, Pred, Successor, Store);
+            {Pred, UpdatedStore} = notify(New, Id, Predecessor, Store),
+            node(Id, Pred, Successor, UpdatedStore);
         {request, Peer} -> % a predecessor needs to know our predecessor
             request(Peer, Predecessor),
             node(Id, Predecessor, Successor, Store);
@@ -31,6 +38,10 @@ node(Id, Predecessor, Successor, Store) ->
             Succ = stabilize(Pred, Id, Successor),
             node(Id, Predecessor, Succ, Store);
         stabilize ->
+            io:format("Id: ~w~n", [Id]),
+            io:format("Predecessor: ~w~n", [Predecessor]),
+            io:format("Successor: ~w~n", [Successor]),
+            io:format("Store: ~w~n", [Store]),
             stabilize(Successor),
             node(Id, Predecessor, Successor, Store);
         probe ->
@@ -56,17 +67,23 @@ node(Id, Predecessor, Successor, Store) ->
             node(Id, Predecessor, Successor, Store);
         {handover, Elements} ->
             Merged = storage:merge(Store, Elements),
-            node(Id, Predecessor, Successor, Merged)
+            node(Id, Predecessor, Successor, Merged);
+        state ->
+	    io:format("ID: ~w~n", [Id]),
+	    io:format("Predecessor: ~p, Successor: ~p~n", [Predecessor, Successor]),
+	    io:format("Store: ~p~n", [Store]),
+	    node(Id, Predecessor, Successor, Store)
     end.
 
 stabilize(Pred, Id, Successor) ->
     {Skey, Spid} = Successor,
         case Pred of
             nil ->
-                Spid ! {notify, {Id, self()}};  
+                Spid ! {notify, {Id, self()}},
+                Successor;
             {Id, _} ->
                 Successor;
-            {Skey, _} ->
+            {Skey, Spid} ->
                 Spid ! {notify, {Id, self()}},
 	            Successor;
             {Xkey, Xpid} -> % XKey is the precessor of our succesor
@@ -83,7 +100,7 @@ stabilize(Pred, Id, Successor) ->
 schedule_stabilize() ->
     timer:send_interval(?Stabilize, self(), stabilize).
 
-stabilize({_, Spid}) ->
+stabilize({_, Spid}) -> %%WHERE IS THIS USED?!
     Spid ! {request, self()}.
 
 request(Peer, Predecessor) ->
