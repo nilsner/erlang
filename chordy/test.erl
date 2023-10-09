@@ -5,7 +5,45 @@
 -define(Timeout, 1000).
 
 
-%% Starting up a set of nodes is made easier using this function.
+myStart() ->
+    Peer1 = test:start(node2), %% Test for node2
+    timer:sleep(4000),
+    test:start(node2, Peer1),
+    timer:sleep(4000),
+    test:start(node2, Peer1),
+    % timer:sleep(4000),
+    % test:start(node2, Peer1),
+    % timer:sleep(4000),
+    % test:start(node2, Peer1),
+    % timer:sleep(4000),
+    % test:start(node2, Peer1),
+    Peer1 ! probe,
+    timer:sleep(1000),
+    Keys = test:keys(15000),
+    timer:sleep(3000),
+    test:add(Keys, Peer1),
+    %test:lookup(hd(Keys), Peer1),
+    timer:sleep(1000),
+    Peer1 ! status,
+    test:check(Keys, Peer1),
+    timer:sleep(1000),
+    Peer1.
+    % Peer1 = test:start(node1), %% Test for node1
+    % timer:sleep(4000),
+    % test:start(node1, Peer1),
+    % timer:sleep(4000),
+    % test:start(node1, Peer1),
+    % timer:sleep(4000),
+    % test:start(node1, Peer1),
+    % timer:sleep(4000),
+    % % test:start(node2, Peer1),
+    % % timer:sleep(4000),
+    % % test:start(node2, Peer1),
+    % % timer:sleep(4000),
+    % % test:start(node2, Peer1),
+    % Peer1 ! probe,
+    % Peer1 ! status,
+    % Peer1.
 
 start(Module) ->
     Id = key:generate(), 
@@ -52,7 +90,7 @@ keys(N) ->
     lists:map(fun(_) -> key:generate() end, lists:seq(1,N)).
 
 add(Keys, P) ->
-    lists:foreach(fun(K) -> add(K, gurka, P) end, Keys).
+    lists:foreach(fun(K) -> add(K, banan, P) end, Keys).
 
 check(Keys, P) ->
     T1 = now(),
